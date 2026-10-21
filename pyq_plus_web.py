@@ -1426,7 +1426,94 @@ ADMIN_HTML = """<!DOCTYPE html>
 <html lang="hi">
 <head>
     <meta charset="UTF-8">
-    <title>Dashboard</title>
+    <title>PYQ Plus — Founder Private Analytics</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
-...
-</html>"""
+<body class="bg-slate-950 text-white min-h-screen p-6 md:p-10 font-sans">
+    <div class="max-w-6xl mx-auto">
+        <div class="flex items-center justify-between mb-8">
+            <div>
+                <h1 class="text-3xl font-extrabold text-white">📊 PYQ Plus — Private Founder Analytics</h1>
+                <p class="text-slate-400 text-sm">Bina login kiye aane wale visitors aur unke rukne ke samay (Retention) ki live report</p>
+            </div>
+            <a href="/" class="px-4 py-2 rounded-xl bg-indigo-600 text-sm font-bold">← Main Website</a>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 mb-10">
+            <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5">
+                <div class="text-xs text-slate-400 uppercase font-bold">Kul Unique Visitors</div>
+                <div id="a-visitors" class="text-3xl font-extrabold text-indigo-400 mt-1">0</div>
+            </div>
+            <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5">
+                <div class="text-xs text-slate-400 uppercase font-bold">Avg. Rukne Ka Samay</div>
+                <div id="a-time" class="text-3xl font-extrabold text-emerald-400 mt-1">0 Min</div>
+            </div>
+            <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5">
+                <div class="text-xs text-slate-400 uppercase font-bold">Registered Students</div>
+                <div id="a-users" class="text-3xl font-extrabold text-amber-400 mt-1">0</div>
+            </div>
+            <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5">
+                <div class="text-xs text-slate-400 uppercase font-bold">⭐ Starred Questions</div>
+                <div id="a-stars" class="text-3xl font-extrabold text-rose-400 mt-1">0</div>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6">
+                <h3 class="font-bold mb-4 text-slate-200">📈 Rozana Kitne Visitors Aaye</h3>
+                <canvas id="visitorsChart"></canvas>
+            </div>
+            <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6">
+                <h3 class="font-bold mb-4 text-slate-200">⏱️ Visitors Kitne Minute Ruke (Avg Retention)</h3>
+                <canvas id="timeChart"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        async function loadAnalytics() {
+            const res = await fetch('/api/admin-analytics');
+            const data = await res.json();
+            const s = data.summary;
+            document.getElementById('a-visitors').innerText = s.total_visitors || 0;
+            document.getElementById('a-time').innerText = ((s.avg_sec || 0) / 60).toFixed(1) + ' Min';
+            document.getElementById('a-users').innerText = s.registered_users || 0;
+            document.getElementById('a-stars').innerText = s.total_stars || 0;
+
+            const labels = data.daily.map(d => d.visit_date);
+            const vCounts = data.daily.map(d => d.visitors);
+            const avgMins = data.daily.map(d => d.avg_minutes);
+
+            new Chart(document.getElementById('visitorsChart'), {
+                type: 'bar',
+                data: { labels, datasets: [{ label: 'Unique Visitors', data: vCounts, backgroundColor: '#6366f1', borderRadius: 8 }] }
+            });
+            new Chart(document.getElementById('timeChart'), {
+                type: 'line',
+                data: { labels, datasets: [{ label: 'Avg Minutes Spent', data: avgMins, borderColor: '#10b981', tension: 0.3, fill: true }] }
+            });
+        }
+        loadAnalytics();
+    </script>
+</body>
+</html>
+"""
+
+
+@app.get("/", response_class=HTMLResponse)
+def serve_home(request: Request):
+    base_url = str(request.base_url).rstrip("/")
+    seo_block = build_seo_injection(base_url)
+    return MAIN_HTML.replace("<!-- __SEO_INJECTION__ -->", seo_block)
+
+
+@app.get("/admin", response_class=HTMLResponse)
+def serve_admin():
+    return ADMIN_HTML
+
+
+if __name__ == "__main__":
+    port = int(os.environ.get("PORT", 7860))
+    print(f"🚀 PYQ Plus Live Server Starting on http://localhost:{port}")
+    uvicorn.run(app, host="0.0.0.0", port=port)
