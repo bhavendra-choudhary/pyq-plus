@@ -555,6 +555,7 @@ MAIN_HTML = """<!DOCTYPE html>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>PYQ Plus — RPSC PYQ Topic-Wise & Subject-Wise Official Archive (2011–2026)</title>
+    <meta name="google-site-verification" content="8CbfnMfVSEcw2j_aTP-LYzcwLpil5c9nbbkTag8FEm0" />
     <meta name="description" content="PYQ Plus: Rajasthan RPSC Official Previous Year Question Papers (2011-2026) Subject-Wise & Topic-Wise Verified Question Bank. RAS, 1st Grade, 2nd Grade, Headmaster, Rajasthan GK, Maths, Science, Reasoning PYQs.">
     <meta name="keywords" content="PYQ Plus, RPSC PYQ, RPSC Previous Year Questions Topic Wise, RPSC Old Question Papers, Rajasthan GK PYQ Topic Wise, RPSC 2nd Grade PYQ, RPSC 1st Grade PYQ, RPSC Archive">
     <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1">
