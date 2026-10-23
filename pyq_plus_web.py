@@ -21,6 +21,15 @@ CROPS_DIR.mkdir(parents=True, exist_ok=True)
 
 SYNC_SECRET_KEY = "pyq_plus_master_sync_2026"
 
+# ==============================================================================
+# ⚠️ IMPORTANT (POINT #8): PASTE YOUR GOOGLE SEARCH CONSOLE META TAG BELOW
+# Agar aapne pichhli bar pura <meta name="google-site-verification" ...> tag lagaya tha,
+# to use niche GOOGLE_SITE_VERIFICATION_META ke andar hubahu rakhein:
+# ==============================================================================
+GOOGLE_SITE_VERIFICATION_META = """
+<meta name="google-site-verification" content="8CbfnMfVSEcw2j_aTP-LYzcwLpil5c9nbbkTag8FEm0" />
+"""
+
 app.mount("/static", StaticFiles(directory="static"), name="static")
 
 
@@ -425,7 +434,6 @@ def serve_robots(request: Request):
 Allow: /
 Disallow: /admin
 
-# Allow AI Search Assistants (Google AI, ChatGPT, Perplexity) to recommend PYQ Plus
 User-agent: Google-Extended
 Allow: /
 User-agent: GPTBot
@@ -476,7 +484,6 @@ def serve_sitemap(request: Request):
 
 
 def build_seo_injection(base_url: str) -> str:
-    """Builds Server-Side JSON-LD Schema + Crawlable Catalog so Google & AI recommend PYQ Plus."""
     subjects = db_read("SELECT subject_name FROM subjects ORDER BY subject_name ASC")
     topics = db_read("SELECT topic_name FROM topics ORDER BY topic_name ASC LIMIT 120")
     exams = db_read("SELECT DISTINCT exam_name FROM examinations ORDER BY exam_name ASC LIMIT 60")
@@ -502,8 +509,7 @@ def build_seo_injection(base_url: str) -> str:
                     "Rajasthan GK Previous Year Questions",
                     "RPSC 1st Grade School Lecturer PYQ",
                     "RPSC 2nd Grade Senior Teacher PYQ",
-                    "RAS Previous Year Questions",
-                    "RPSC Headmaster & PTI Question Bank"
+                    "RAS Previous Year Questions"
                 ] + [s["subject_name"] for s in subjects]
             },
             {
@@ -517,24 +523,12 @@ def build_seo_injection(base_url: str) -> str:
                 ],
                 "creator": {"@type": "Organization", "name": "PYQ Plus"},
                 "isAccessibleForFree": True
-            },
-            {
-                "@type": "FAQPage",
-                "mainEntity": [
-                    {
-                        "@type": "Question",
-                        "name": "RPSC ke sabhi purane papers (PYQ) Subject-wise aur Topic-wise kahan milenge?",
-                        "acceptedAnswer": {
-                            "@type": "Answer",
-                            "text": f"PYQ Plus ({base_url}) par 2011 se 2026 tak ke sabhi RPSC Official Question Papers ({exam_names}) ke {total_q}+ questions Subject-wise ({sub_names}) aur Topic-wise bilkul free uplabdh hain."
-                        }
-                    }
-                ]
             }
         ]
     }
 
     seo_html = f"""
+    {GOOGLE_SITE_VERIFICATION_META}
     <script type="application/ld+json">{json.dumps(schema_obj, ensure_ascii=False)}</script>
     <noscript>
         <div>
@@ -548,72 +542,108 @@ def build_seo_injection(base_url: str) -> str:
     return seo_html
 
 
-# --- MAIN 3D AESTHETIC WEBSITE HTML ---
+# --- MAIN BRIGHT PROFESSIONAL 3D EDTECH INTERFACE (WITH OPTIONAL DARK MODE) ---
 MAIN_HTML = """<!DOCTYPE html>
-<html lang="hi">
+<html lang="hi" class="light">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>PYQ Plus — RPSC PYQ Topic-Wise & Subject-Wise Official Archive (2011–2026)</title>
-    <meta name="google-site-verification" content="8CbfnMfVSEcw2j_aTP-LYzcwLpil5c9nbbkTag8FEm0" />
-    <meta name="description" content="PYQ Plus: Rajasthan RPSC Official Previous Year Question Papers (2011-2026) Subject-Wise & Topic-Wise Verified Question Bank. RAS, 1st Grade, 2nd Grade, Headmaster, Rajasthan GK, Maths, Science, Reasoning PYQs.">
-    <meta name="keywords" content="PYQ Plus, RPSC PYQ, RPSC Previous Year Questions Topic Wise, RPSC Old Question Papers, Rajasthan GK PYQ Topic Wise, RPSC 2nd Grade PYQ, RPSC 1st Grade PYQ, RPSC Archive">
+    <meta name="description" content="PYQ Plus: Rajasthan RPSC Official Previous Year Question Papers (2011-2026) Subject-Wise & Topic-Wise Verified Question Bank.">
+    <meta name="keywords" content="PYQ Plus, RPSC PYQ, RPSC Previous Year Questions Topic Wise, RPSC Old Question Papers, Rajasthan GK PYQ Topic Wise">
     <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1">
-    <meta property="og:title" content="PYQ Plus — Rajasthan's #1 RPSC Topic-Wise Question Bank">
-    <meta property="og:description" content="2011 se 2026 tak ke sabhi RPSC Official Papers ka Subject-Wise aur Topic-Wise Digital Sankalan.">
-    <meta property="og:type" content="website">
     <!-- __SEO_INJECTION__ -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r134/three.min.js"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&family=Noto+Sans+Devanagari:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Plus Jakarta Sans', 'Noto Sans Devanagari', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- 3D Tilt Physics & Micro-Confetti CDN Libraries (No Local Install Needed) -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/vanilla-tilt/1.8.1/vanilla-tilt.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.2/dist/confetti.browser.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Noto+Sans+Devanagari:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
         html { scroll-behavior: smooth; }
         body {
             font-family: 'Plus Jakarta Sans', 'Noto Sans Devanagari', sans-serif;
-            background-color: #060913;
-            color: #f8fafc;
+            background-color: #f8fafc;
+            background-image: 
+                radial-gradient(at 0% 0%, rgba(99, 102, 241, 0.08) 0px, transparent 50%),
+                radial-gradient(at 100% 0%, rgba(236, 72, 153, 0.07) 0px, transparent 50%),
+                radial-gradient(at 50% 100%, rgba(16, 185, 129, 0.06) 0px, transparent 50%);
+            color: #0f172a;
             overflow-x: hidden;
+            transition: background-color 0.35s ease, color 0.35s ease;
         }
-        #bg-canvas {
-            position: fixed;
-            top: 0; left: 0; width: 100vw; height: 100vh;
-            z-index: 0; pointer-events: none;
-        }
-        .glass {
-            background: rgba(15, 23, 42, 0.74);
-            backdrop-filter: blur(18px);
-            -webkit-backdrop-filter: blur(18px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-        }
-        .glass-card {
-            background: linear-gradient(145deg, rgba(30, 41, 59, 0.78), rgba(15, 23, 42, 0.9));
-            backdrop-filter: blur(14px);
-            border: 1px solid rgba(99, 102, 241, 0.24);
-            transition: all 0.32s cubic-bezier(0.16, 1, 0.3, 1);
-        }
-        .glass-card:hover {
-            transform: translateY(-5px) scale(1.015);
-            border-color: rgba(99, 102, 241, 0.7);
-            box-shadow: 0 14px 34px -10px rgba(99, 102, 241, 0.4);
-        }
-        .intro-overlay {
-            position: fixed; inset: 0; z-index: 50;
-            display: flex; flex-direction: column; align-items: center; justify-content: center;
-            background: radial-gradient(circle at center, rgba(15, 23, 42, 0.4) 0%, #060913 100%);
-            transition: opacity 0.8s ease, transform 0.8s cubic-bezier(0.16, 1, 0.3, 1);
-        }
-        .intro-hidden {
-            opacity: 0; transform: scale(1.12); pointer-events: none;
+        html.dark body {
+            background-color: #0b1120;
+            background-image: 
+                radial-gradient(at 0% 0%, rgba(99, 102, 241, 0.15) 0px, transparent 50%),
+                radial-gradient(at 100% 0%, rgba(236, 72, 153, 0.12) 0px, transparent 50%);
+            color: #f8fafc;
         }
 
+        /* 3D ELEVATED PROFESSIONAL SURFACES */
+        .pro-surface {
+            background: rgba(255, 255, 255, 0.88);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(226, 232, 240, 0.95);
+            box-shadow: 0 10px 30px -10px rgba(15, 23, 42, 0.06), 0 4px 6px -2px rgba(15, 23, 42, 0.03);
+        }
+        html.dark .pro-surface {
+            background: rgba(15, 23, 42, 0.82);
+            border: 1px solid rgba(51, 65, 85, 0.8);
+            box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.45);
+        }
+
+        /* 3D INTERACTIVE SUBJECT & STAT CARDS */
+        .card-3d {
+            background: linear-gradient(145deg, #ffffff, #f8fafc);
+            border: 1px solid rgba(99, 102, 241, 0.16);
+            box-shadow: 
+                0 12px 24px -8px rgba(79, 70, 229, 0.08),
+                0 2px 6px -1px rgba(15, 23, 42, 0.04),
+                inset 0 1px 0 0 rgba(255, 255, 255, 0.9);
+            transform-style: preserve-3d;
+            transition: border-color 0.25s ease, box-shadow 0.25s ease;
+        }
+        .card-3d:hover {
+            border-color: rgba(79, 70, 229, 0.55);
+            box-shadow: 
+                0 20px 38px -12px rgba(79, 70, 229, 0.2),
+                0 6px 14px -3px rgba(79, 70, 229, 0.08);
+        }
+        html.dark .card-3d {
+            background: linear-gradient(145deg, #1e293b, #0f172a);
+            border: 1px solid rgba(99, 102, 241, 0.25);
+            box-shadow: 0 12px 28px -8px rgba(0, 0, 0, 0.5);
+        }
+        html.dark .card-3d:hover {
+            border-color: rgba(129, 140, 248, 0.7);
+            box-shadow: 0 20px 38px -10px rgba(99, 102, 241, 0.35);
+        }
+        .pop-depth {
+            transform: translateZ(24px);
+        }
+
+        /* EYE-CATCHING "COMING SOON ALL" BADGE */
         @keyframes neonPulse {
             0%, 100% {
-                box-shadow: 0 0 15px rgba(245, 158, 11, 0.55), 0 0 30px rgba(236, 72, 153, 0.35);
-                transform: translateY(0px) scale(1);
+                box-shadow: 0 4px 18px rgba(245, 158, 11, 0.35), 0 0 0 0 rgba(236, 72, 153, 0.3);
+                transform: translateY(0px);
             }
             50% {
-                box-shadow: 0 0 25px rgba(245, 158, 11, 0.9), 0 0 45px rgba(236, 72, 153, 0.65);
-                transform: translateY(-2px) scale(1.04);
+                box-shadow: 0 6px 24px rgba(236, 72, 153, 0.5), 0 0 0 4px rgba(245, 158, 11, 0.15);
+                transform: translateY(-1.5px);
             }
         }
         @keyframes shimmerSweep {
@@ -622,66 +652,110 @@ MAIN_HTML = """<!DOCTYPE html>
         }
         .coming-soon-badge {
             position: relative; overflow: hidden;
-            background: linear-gradient(135deg, #f59e0b 0%, #ec4899 50%, #6366f1 100%);
+            background: linear-gradient(135deg, #f59e0b 0%, #ec4899 50%, #4f46e5 100%);
             padding: 2px; border-radius: 9999px;
             animation: neonPulse 2.6s infinite ease-in-out;
             cursor: pointer;
         }
         .coming-soon-inner {
-            background: rgba(10, 14, 26, 0.92);
-            backdrop-filter: blur(12px);
+            background: #ffffff;
             border-radius: 9999px;
-            padding: 7px 18px;
+            padding: 6px 16px;
             display: inline-flex; align-items: center; gap: 8px;
+        }
+        html.dark .coming-soon-inner {
+            background: #0f172a;
         }
         .coming-soon-badge::after {
             content: ""; position: absolute; top: 0; left: 0; width: 45%; height: 100%;
-            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.45), transparent);
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.7), transparent);
             animation: shimmerSweep 2.8s infinite;
         }
         .coming-soon-text {
+            background: linear-gradient(90deg, #d97706, #db2777, #4f46e5);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            font-weight: 800; letter-spacing: 0.3px;
+        }
+        html.dark .coming-soon-text {
             background: linear-gradient(90deg, #fde68a, #f472b6, #a5b4fc);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
-            font-weight: 800; letter-spacing: 0.4px;
         }
 
-        @keyframes spinOuter {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
+        /* 3D ENTRY SPLASH OVERLAY (CLEAN BRIGHT 3D) */
+        .intro-overlay {
+            position: fixed; inset: 0; z-index: 50;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            background: radial-gradient(circle at center, #ffffff 0%, #eef2ff 100%);
+            transition: opacity 0.7s ease, transform 0.7s cubic-bezier(0.16, 1, 0.3, 1);
         }
-        @keyframes spinInner {
-            0% { transform: rotate(360deg); }
-            100% { transform: rotate(0deg); }
+        html.dark .intro-overlay {
+            background: radial-gradient(circle at center, #1e293b 0%, #090d16 100%);
         }
-        @keyframes pulseGlow {
-            0%, 100% { opacity: 1; transform: scale(1); }
-            50% { opacity: 0.65; transform: scale(0.96); }
+        .intro-hidden {
+            opacity: 0; transform: scale(1.08); pointer-events: none;
         }
+
+        /* "WAIT..." LOADING SPINNER */
+        @keyframes spinOuter { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        @keyframes spinInner { 0% { transform: rotate(360deg); } 100% { transform: rotate(0deg); } }
         .wait-ring-outer {
-            width: 76px; height: 76px;
-            border-radius: 50%;
-            border: 4px solid rgba(99, 102, 241, 0.15);
-            border-top-color: #818cf8;
-            border-right-color: #c084fc;
-            animation: spinOuter 0.9s cubic-bezier(0.5, 0.1, 0.5, 0.9) infinite;
-            box-shadow: 0 0 25px rgba(99, 102, 241, 0.4);
+            width: 72px; height: 72px; border-radius: 50%;
+            border: 4px solid rgba(79, 70, 229, 0.15);
+            border-top-color: #4f46e5; border-right-color: #ec4899;
+            animation: spinOuter 0.85s cubic-bezier(0.5, 0.1, 0.5, 0.9) infinite;
         }
         .wait-ring-inner {
-            position: absolute;
-            width: 52px; height: 52px;
-            border-radius: 50%;
-            border: 4px solid rgba(245, 158, 11, 0.15);
-            border-bottom-color: #f59e0b;
-            border-left-color: #ec4899;
-            animation: spinInner 0.75s linear infinite;
+            position: absolute; width: 48px; height: 48px; border-radius: 50%;
+            border: 4px solid rgba(245, 158, 11, 0.18);
+            border-bottom-color: #f59e0b; border-left-color: #10b981;
+            animation: spinInner 0.7s linear infinite;
         }
-        .wait-text-glow {
-            background: linear-gradient(90deg, #ffffff, #a5b4fc, #f472b6, #ffffff);
-            background-size: 200% auto;
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            animation: pulseGlow 1.5s infinite ease-in-out;
+
+        /* POINT #6: EXAM NAME CLICK -> SLIDE-UP DATE & SHIFT REVEAL */
+        .exam-meta-drawer {
+            max-height: 0;
+            opacity: 0;
+            overflow: hidden;
+            transform: translateY(8px) scale(0.97);
+            transition: all 0.32s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+        .exam-meta-drawer.open {
+            max-height: 80px;
+            opacity: 1;
+            transform: translateY(0) scale(1);
+            margin-bottom: 10px;
+        }
+
+        /* POINT #7: PURE ICON STAR ANIMATION (NO TEXT) */
+        @keyframes starPop {
+            0% { transform: scale(1) rotate(0deg); }
+            35% { transform: scale(1.42) rotate(-18deg); }
+            70% { transform: scale(0.9) rotate(12deg); }
+            100% { transform: scale(1) rotate(0deg); }
+        }
+        .star-icon-btn {
+            width: 44px; height: 44px;
+            border-radius: 14px;
+            display: inline-flex; align-items: center; justify-content: center;
+            transition: all 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+            position: relative;
+        }
+        .star-icon-btn:hover {
+            transform: translateY(-2px) scale(1.08);
+        }
+        .star-icon-btn.active-star {
+            background: linear-gradient(135deg, #fef3c7, #fde68a);
+            border: 1px solid #f59e0b;
+            box-shadow: 0 6px 18px -4px rgba(245, 158, 11, 0.45);
+        }
+        html.dark .star-icon-btn.active-star {
+            background: linear-gradient(135deg, rgba(245, 158, 11, 0.25), rgba(217, 119, 6, 0.35));
+            border: 1px solid #fbbf24;
+        }
+        .star-pop-anim {
+            animation: starPop 0.55s cubic-bezier(0.34, 1.56, 0.64, 1);
         }
 
         @keyframes cardFadeUp {
@@ -695,9 +769,7 @@ MAIN_HTML = """<!DOCTYPE html>
 </head>
 <body class="min-h-screen relative">
 
-    <canvas id="bg-canvas"></canvas>
-
-    <!-- 3D Entry Splash Animation -->
+    <!-- 3D Entry Splash Screen -->
     <div id="intro-screen" class="intro-overlay">
         <div class="text-center px-6 max-w-2xl">
             <div onclick="openComingSoonModal()" class="coming-soon-badge inline-block mb-6">
@@ -711,35 +783,39 @@ MAIN_HTML = """<!DOCTYPE html>
                 </div>
             </div>
 
-            <h1 class="text-6xl md:text-7xl font-extrabold tracking-tight bg-gradient-to-r from-white via-indigo-200 to-indigo-400 bg-clip-text text-transparent mb-4">
+            <div class="w-20 h-20 mx-auto mb-5 rounded-3xl bg-gradient-to-br from-indigo-600 via-violet-600 to-fuchsia-600 flex items-center justify-center text-white font-extrabold text-4xl shadow-2xl shadow-indigo-500/30">
+                P+
+            </div>
+
+            <h1 class="text-5xl md:text-7xl font-extrabold tracking-tight bg-gradient-to-r from-indigo-700 via-violet-600 to-fuchsia-600 dark:from-white dark:via-indigo-200 dark:to-indigo-400 bg-clip-text text-transparent mb-4">
                 PYQ Plus
             </h1>
-            <p class="text-slate-300 text-lg md:text-xl mb-8">
-                RPSC Official Previous Year Questions ka Subject-Wise aur Topic-Wise Digital Sankalan
+            <p class="text-slate-600 dark:text-slate-300 text-lg md:text-xl mb-8 font-medium">
+                Rajasthan RPSC Official Previous Year Questions ka Subject-Wise aur Topic-Wise Smart 3D Sankalan
             </p>
-            <button onclick="enterPortal()" class="px-8 py-4 rounded-2xl bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 text-white font-bold text-lg shadow-lg shadow-indigo-600/40 transition transform hover:scale-105 active:scale-95">
-                🚀 Explore PYQ Plus Archive
+            <button onclick="enterPortal()" class="px-9 py-4 rounded-2xl bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 text-white font-extrabold text-lg shadow-xl shadow-indigo-600/30 transition transform hover:scale-105 active:scale-95">
+                🚀 Start Smart Preparation
             </button>
         </div>
     </div>
 
     <!-- AESTHETIC "WAIT..." LOADING MODAL OVERLAY -->
-    <div id="wait-loader" class="fixed inset-0 z-50 hidden items-center justify-center bg-slate-950/75 backdrop-blur-md transition-opacity duration-300">
-        <div class="glass rounded-3xl px-10 py-8 border border-indigo-500/40 shadow-2xl flex flex-col items-center text-center max-w-xs w-full mx-4">
-            <div class="relative flex items-center justify-center mb-5">
+    <div id="wait-loader" class="fixed inset-0 z-50 hidden items-center justify-center bg-slate-900/40 dark:bg-slate-950/75 backdrop-blur-md transition-opacity duration-300">
+        <div class="pro-surface rounded-3xl px-10 py-8 shadow-2xl flex flex-col items-center text-center max-w-xs w-full mx-4">
+            <div class="relative flex items-center justify-center mb-4">
                 <div class="wait-ring-outer"></div>
                 <div class="wait-ring-inner"></div>
                 <span class="absolute text-lg">⚡</span>
             </div>
-            <div class="text-2xl font-extrabold tracking-wider wait-text-glow flex items-center gap-1">
+            <div class="text-2xl font-extrabold tracking-wider text-indigo-600 dark:text-indigo-400 flex items-center gap-1">
                 <span>Wait</span>
                 <span class="inline-flex gap-1 ml-1">
-                    <span class="w-2 h-2 rounded-full bg-indigo-400 animate-bounce" style="animation-delay: 0ms;"></span>
-                    <span class="w-2 h-2 rounded-full bg-pink-400 animate-bounce" style="animation-delay: 150ms;"></span>
-                    <span class="w-2 h-2 rounded-full bg-amber-400 animate-bounce" style="animation-delay: 300ms;"></span>
+                    <span class="w-2 h-2 rounded-full bg-indigo-500 animate-bounce" style="animation-delay: 0ms;"></span>
+                    <span class="w-2 h-2 rounded-full bg-pink-500 animate-bounce" style="animation-delay: 150ms;"></span>
+                    <span class="w-2 h-2 rounded-full bg-amber-500 animate-bounce" style="animation-delay: 300ms;"></span>
                 </span>
             </div>
-            <p id="wait-subtext" class="text-xs text-slate-300 mt-2 font-semibold">
+            <p id="wait-subtext" class="text-xs text-slate-500 dark:text-slate-300 mt-2 font-semibold">
                 Sawaal load ho rahe hain...
             </p>
         </div>
@@ -747,14 +823,16 @@ MAIN_HTML = """<!DOCTYPE html>
 
     <div class="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-20">
         
-        <header class="glass sticky top-4 z-30 rounded-2xl px-5 py-3.5 mt-4 mb-8 flex flex-wrap items-center justify-between gap-4 shadow-xl">
+        <!-- POINT #1: TOP NAVBAR FIXED AT THE TOP OF THE PAGE (DOES NOT FOLLOW SCROLL DOWN) -->
+        <header class="pro-surface relative rounded-3xl px-5 py-4 mt-5 mb-8 flex flex-wrap items-center justify-between gap-4">
             <div class="flex items-center gap-4 flex-wrap">
-                <div onclick="showHome()" class="flex items-center gap-3 cursor-pointer">
-                    <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center font-extrabold text-xl shadow-md">
+                <div onclick="showHome()" class="flex items-center gap-3 cursor-pointer group">
+                    <div class="w-11 h-11 rounded-2xl bg-gradient-to-br from-indigo-600 to-violet-600 flex items-center justify-center font-extrabold text-xl text-white shadow-lg shadow-indigo-500/25 group-hover:scale-105 transition">
                         P+
                     </div>
                     <div>
-                        <span class="text-2xl font-extrabold tracking-tight text-white">PYQ <span class="text-indigo-400">Plus</span></span>
+                        <span class="text-2xl font-extrabold tracking-tight text-slate-900 dark:text-white">PYQ <span class="text-indigo-600 dark:text-indigo-400">Plus</span></span>
+                        <span class="block text-[11px] font-bold text-slate-400 dark:text-slate-400 -mt-1">RPSC Official Archive</span>
                     </div>
                 </div>
 
@@ -762,7 +840,7 @@ MAIN_HTML = """<!DOCTYPE html>
                     <div class="coming-soon-inner">
                         <span class="relative flex h-2.5 w-2.5">
                             <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
-                            <span class="relative inline-flex rounded-full h-2.5 w-2.5 bg-amber-400"></span>
+                            <span class="relative inline-flex rounded-full h-2.5 w-2.5 bg-amber-500"></span>
                         </span>
                         <span class="text-base">✨</span>
                         <span class="coming-soon-text text-xs sm:text-sm">Coming Soon All</span>
@@ -771,78 +849,96 @@ MAIN_HTML = """<!DOCTYPE html>
             </div>
 
             <div class="flex items-center gap-2.5 flex-wrap">
-                <button onclick="showHome()" class="px-4 py-2 rounded-xl text-sm font-semibold bg-slate-800/80 hover:bg-slate-700 text-slate-200 transition">
+                <button onclick="showHome()" class="px-4 py-2.5 rounded-xl text-sm font-bold bg-slate-100 hover:bg-indigo-50 text-slate-700 hover:text-indigo-600 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700 transition">
                     📚 Subjects
                 </button>
-                <button onclick="openStarredTab()" class="px-4 py-2 rounded-xl text-sm font-semibold bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border border-amber-500/30 transition flex items-center gap-1.5">
-                    ⭐ Saved Questions
+                <button onclick="openStarredTab()" class="px-4 py-2.5 rounded-xl text-sm font-bold bg-amber-50 hover:bg-amber-100 text-amber-700 border border-amber-200 dark:bg-amber-500/15 dark:text-amber-300 dark:border-amber-500/30 transition flex items-center gap-1.5">
+                    ⭐ Saved
                 </button>
-                <button id="auth-btn" onclick="openLoginModal()" class="px-4 py-2 rounded-xl text-sm font-bold bg-indigo-600 hover:bg-indigo-500 text-white transition shadow-md">
+                <!-- POINT #2: SEPARATE OPTIONAL DARK MODE TOGGLE BUTTON -->
+                <button id="theme-toggle-btn" onclick="toggleThemeMode()" class="w-10 h-10 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-amber-300 flex items-center justify-center text-lg transition" title="Dark / Light Mode Badlein">
+                    🌙
+                </button>
+                <button id="auth-btn" onclick="openLoginModal()" class="px-4 py-2.5 rounded-xl text-sm font-bold bg-indigo-600 hover:bg-indigo-500 text-white transition shadow-md shadow-indigo-600/20">
                     👤 Login
                 </button>
             </div>
         </header>
 
-        <section id="hero-banner" class="glass rounded-3xl p-8 mb-10 text-center border border-indigo-500/20 relative overflow-hidden">
-            <div class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-amber-500/15 border border-amber-400/30 text-amber-300 text-xs sm:text-sm font-bold mb-4">
-                🔥 2011 Papers Live • Aage ke Sabhi Years Lagatar Add Ho Rahe Hain!
+        <!-- Hero Stats Banner with 3D Depth Cards -->
+        <section id="hero-banner" class="pro-surface rounded-3xl p-8 mb-10 text-center relative overflow-hidden">
+            <div class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-indigo-50 border border-indigo-200 text-indigo-700 dark:bg-amber-500/15 dark:border-amber-400/30 dark:text-amber-300 text-xs sm:text-sm font-bold mb-4">
+                🔥 2011 Official Papers Live • Aage ke Sabhi Years Step-by-Step Add Ho Rahe Hain!
             </div>
-            <h2 class="text-3xl md:text-4xl font-extrabold text-white mb-2">
-                🏛️ RPSC Topic-Wise Question Bank
+            <h2 class="text-3xl md:text-4xl font-extrabold text-slate-900 dark:text-white mb-2 tracking-tight">
+                🏛️ RPSC Topic-Wise Verified Question Bank
             </h2>
-            <p class="text-slate-400 max-w-2xl mx-auto mb-6">
-                Kisi bhi Subject card par click karein aur uske andar ke Topic ko chunein. Important sawalon ko ⭐ Star lagakar apne personal folder me save karein.
+            <p class="text-slate-500 dark:text-slate-400 max-w-2xl mx-auto mb-7 text-sm sm:text-base font-medium">
+                Apना Subject chunein aur Topic-wise purane sawalon ki practice karein. Kisi bhi sawal ke Exam naam par click karke uski Date & Shift dekhein.
             </p>
-            <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 max-w-3xl mx-auto">
-                <div class="glass-card rounded-2xl p-4">
-                    <div class="text-slate-400 text-xs uppercase font-bold">Kul Subjects</div>
-                    <div id="stat-subs" class="text-3xl font-extrabold text-indigo-400 mt-1">-</div>
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-5 max-w-3xl mx-auto">
+                <div class="card-3d rounded-2xl p-5" data-tilt data-tilt-max="8" data-tilt-speed="400" data-tilt-glare data-tilt-max-glare="0.15">
+                    <div class="pop-depth">
+                        <div class="text-slate-400 dark:text-slate-400 text-xs uppercase font-extrabold tracking-wider">Kul Subjects</div>
+                        <div id="stat-subs" class="text-3xl font-extrabold text-indigo-600 dark:text-indigo-400 mt-1">-</div>
+                    </div>
                 </div>
-                <div class="glass-card rounded-2xl p-4">
-                    <div class="text-slate-400 text-xs uppercase font-bold">Verified Topics</div>
-                    <div id="stat-tops" class="text-3xl font-extrabold text-emerald-400 mt-1">-</div>
+                <div class="card-3d rounded-2xl p-5" data-tilt data-tilt-max="8" data-tilt-speed="400" data-tilt-glare data-tilt-max-glare="0.15">
+                    <div class="pop-depth">
+                        <div class="text-slate-400 dark:text-slate-400 text-xs uppercase font-extrabold tracking-wider">Verified Topics</div>
+                        <div id="stat-tops" class="text-3xl font-extrabold text-emerald-600 dark:text-emerald-400 mt-1">-</div>
+                    </div>
                 </div>
-                <div class="glass-card rounded-2xl p-4">
-                    <div class="text-slate-400 text-xs uppercase font-bold">Verified Questions</div>
-                    <div id="stat-qs" class="text-3xl font-extrabold text-amber-400 mt-1">-</div>
+                <div class="card-3d rounded-2xl p-5" data-tilt data-tilt-max="8" data-tilt-speed="400" data-tilt-glare data-tilt-max-glare="0.15">
+                    <div class="pop-depth">
+                        <div class="text-slate-400 dark:text-slate-400 text-xs uppercase font-extrabold tracking-wider">Official Questions</div>
+                        <div id="stat-qs" class="text-3xl font-extrabold text-amber-600 dark:text-amber-400 mt-1">-</div>
+                    </div>
                 </div>
             </div>
         </section>
 
+        <!-- STEP 1: 3D SUBJECTS GRID -->
         <section id="subjects-section">
             <div class="flex items-center justify-between mb-5">
-                <h3 class="text-xl font-bold text-white flex items-center gap-2">
-                    <span>1️⃣</span> Subject Chunein
+                <h3 class="text-xl font-extrabold text-slate-900 dark:text-white flex items-center gap-2">
+                    <span class="w-7 h-7 rounded-lg bg-indigo-600 text-white text-sm inline-flex items-center justify-center">1</span>
+                    Subject Chunein
                 </h3>
             </div>
             <div id="subjects-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5"></div>
         </section>
 
+        <!-- STEP 2: TOPICS DRAWER -->
         <section id="topics-section" class="hidden mt-8">
-            <div class="glass rounded-3xl p-6 border border-indigo-500/30">
-                <div class="flex flex-wrap items-center justify-between gap-4 mb-5">
+            <div class="pro-surface rounded-3xl p-7">
+                <div class="flex flex-wrap items-center justify-between gap-4 mb-5 pb-4 border-b border-slate-200 dark:border-slate-800">
                     <div>
-                        <span class="text-xs uppercase tracking-wider text-indigo-400 font-bold">Chuna Gaya Subject</span>
-                        <h3 id="active-subject-title" class="text-2xl font-extrabold text-white mt-0.5"></h3>
+                        <span class="text-xs uppercase tracking-wider text-indigo-600 dark:text-indigo-400 font-extrabold">Chuna Gaya Subject</span>
+                        <h3 id="active-subject-title" class="text-2xl font-extrabold text-slate-900 dark:text-white mt-0.5"></h3>
                     </div>
-                    <button onclick="showHome()" class="text-sm text-slate-300 hover:text-white px-3 py-1.5 rounded-lg bg-slate-800">
+                    <button onclick="showHome()" class="text-sm font-bold text-slate-600 hover:text-indigo-600 dark:text-slate-300 dark:hover:text-white px-4 py-2 rounded-xl bg-slate-100 hover:bg-indigo-50 dark:bg-slate-800 transition">
                         ← Subject Badlein
                     </button>
                 </div>
-                <p class="text-sm text-slate-400 mb-4">2️⃣ Niche diye gaye kisi bhi Topic par click karein:</p>
+                <p class="text-sm text-slate-500 dark:text-slate-400 font-semibold mb-4">2️⃣ Ab niche diye gaye kisi bhi Topic par click karein:</p>
                 <div id="topics-grid" class="flex flex-wrap gap-3"></div>
             </div>
         </section>
 
+        <!-- STEP 3: QUESTIONS VIEW WITH 50-50 TABS -->
         <section id="questions-section" class="hidden mt-8">
-            <div class="glass rounded-3xl p-6 mb-6 border-l-4 border-l-indigo-500 flex flex-wrap items-center justify-between gap-4">
+            <div class="pro-surface rounded-3xl p-6 mb-6 border-l-4 border-l-indigo-600 flex flex-wrap items-center justify-between gap-4">
                 <div>
-                    <div id="q-header-sub" class="text-xs font-bold uppercase tracking-wider text-indigo-400"></div>
+                    <div id="q-header-sub" class="text-xs font-extrabold uppercase tracking-wider text-indigo-600 dark:text-indigo-400"></div>
                     <div class="flex items-center gap-3 mt-1 flex-wrap">
-                        <h2 id="q-header-top" class="text-2xl md:text-3xl font-extrabold text-white"></h2>
-                        <span id="q-header-count" class="text-xs font-bold px-3 py-1 rounded-full bg-indigo-500/20 text-indigo-300 border border-indigo-500/30"></span>
+                        <h2 id="q-header-top" class="text-2xl md:text-3xl font-extrabold text-slate-900 dark:text-white"></h2>
+                        <span id="q-header-count" class="text-xs font-extrabold px-3.5 py-1 rounded-full bg-indigo-50 text-indigo-700 border border-indigo-200 dark:bg-indigo-500/20 dark:text-indigo-300 dark:border-indigo-500/30"></span>
                     </div>
                 </div>
+                <button onclick="showHome()" class="text-xs sm:text-sm font-bold px-4 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 dark:bg-slate-800 dark:text-slate-200 transition">
+                    📚 Sabhi Subjects
+                </button>
             </div>
 
             <div id="batch-tabs" class="flex flex-wrap gap-2.5 mb-6"></div>
@@ -853,61 +949,61 @@ MAIN_HTML = """<!DOCTYPE html>
     </div>
 
     <!-- COMING SOON MODAL -->
-    <div id="coming-soon-modal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/75 backdrop-blur-md p-4">
-        <div class="glass rounded-3xl max-w-md w-full p-8 border border-amber-500/40 shadow-2xl relative text-center">
-            <button onclick="closeComingSoonModal()" class="absolute top-5 right-5 text-slate-400 hover:text-white text-xl">✕</button>
-            <div class="w-16 h-16 mx-auto rounded-2xl bg-gradient-to-br from-amber-500/30 to-pink-500/30 border border-amber-400/50 flex items-center justify-center text-3xl mb-4 shadow-lg">
+    <div id="coming-soon-modal" class="fixed inset-0 z-50 hidden items-center justify-center bg-slate-900/60 backdrop-blur-md p-4">
+        <div class="pro-surface rounded-3xl max-w-md w-full p-8 shadow-2xl relative text-center">
+            <button onclick="closeComingSoonModal()" class="absolute top-5 right-5 text-slate-400 hover:text-slate-700 dark:hover:text-white text-xl">✕</button>
+            <div class="w-16 h-16 mx-auto rounded-2xl bg-gradient-to-br from-amber-500/20 to-pink-500/20 border border-amber-400/50 flex items-center justify-center text-3xl mb-4 shadow-md">
                 🚀
             </div>
-            <div class="inline-block px-3 py-1 rounded-full bg-amber-500/20 text-amber-300 text-xs font-bold mb-2">
+            <div class="inline-block px-3 py-1 rounded-full bg-amber-100 text-amber-800 dark:bg-amber-500/20 dark:text-amber-300 text-xs font-extrabold mb-2">
                 ✨ Coming Soon All
             </div>
-            <h3 class="text-2xl font-extrabold text-white mb-2">Naye Papers & Years Lagatar Add Ho Rahe Hain!</h3>
-            <p class="text-sm text-slate-300 leading-relaxed mb-6">
+            <h3 class="text-2xl font-extrabold text-slate-900 dark:text-white mb-2">Naye Papers & Years Lagatar Add Ho Rahe Hain!</h3>
+            <p class="text-sm text-slate-600 dark:text-slate-300 leading-relaxed mb-6">
                 Abhi <b>2011</b> ke sabhi RPSC papers Subject-Wise aur Topic-Wise live kar diye gaye hain. 
                 <b>2012 se 2026</b> tak ke baaki sabhi RPSC question papers step-by-step jaldi hi isi portal par add ho jayenge!
             </p>
             <div class="grid grid-cols-2 gap-3 text-left mb-6">
-                <div class="p-3 rounded-xl bg-emerald-500/15 border border-emerald-500/30">
-                    <div class="text-xs text-emerald-300 font-bold">✅ 2011 Archive</div>
-                    <div class="text-sm font-extrabold text-white mt-0.5">100% Live Now</div>
+                <div class="p-3 rounded-xl bg-emerald-50 border border-emerald-200 dark:bg-emerald-500/15 dark:border-emerald-500/30">
+                    <div class="text-xs text-emerald-700 dark:text-emerald-300 font-bold">✅ 2011 Archive</div>
+                    <div class="text-sm font-extrabold text-slate-900 dark:text-white mt-0.5">100% Live Now</div>
                 </div>
-                <div class="p-3 rounded-xl bg-amber-500/15 border border-amber-500/30">
-                    <div class="text-xs text-amber-300 font-bold">⏳ 2012 – 2026</div>
-                    <div class="text-sm font-extrabold text-white mt-0.5">Coming Soon...</div>
+                <div class="p-3 rounded-xl bg-amber-50 border border-amber-200 dark:bg-amber-500/15 dark:border-amber-500/30">
+                    <div class="text-xs text-amber-700 dark:text-amber-300 font-bold">⏳ 2012 – 2026</div>
+                    <div class="text-sm font-extrabold text-slate-900 dark:text-white mt-0.5">Coming Soon...</div>
                 </div>
             </div>
-            <button onclick="closeComingSoonModal()" class="w-full py-3 rounded-xl bg-gradient-to-r from-amber-500 to-pink-600 hover:from-amber-400 hover:to-pink-500 text-white font-bold shadow-lg transition">
+            <button onclick="closeComingSoonModal()" class="w-full py-3.5 rounded-xl bg-gradient-to-r from-amber-500 to-pink-600 hover:from-amber-400 hover:to-pink-500 text-white font-bold shadow-lg transition">
                 👍 Samajh Gaya, Padhai Shuru Karein!
             </button>
         </div>
     </div>
 
     <!-- LOGIN MODAL -->
-    <div id="login-modal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/70 backdrop-blur-md p-4">
-        <div class="glass rounded-3xl max-w-md w-full p-8 border border-indigo-500/40 shadow-2xl relative">
-            <button onclick="closeLoginModal()" class="absolute top-5 right-5 text-slate-400 hover:text-white text-xl">✕</button>
-            <div class="w-12 h-12 rounded-2xl bg-indigo-600/30 border border-indigo-400/40 flex items-center justify-center text-2xl mb-4">
+    <div id="login-modal" class="fixed inset-0 z-50 hidden items-center justify-center bg-slate-900/60 backdrop-blur-md p-4">
+        <div class="pro-surface rounded-3xl max-w-md w-full p-8 shadow-2xl relative">
+            <button onclick="closeLoginModal()" class="absolute top-5 right-5 text-slate-400 hover:text-slate-700 dark:hover:text-white text-xl">✕</button>
+            <div class="w-12 h-12 rounded-2xl bg-indigo-50 border border-indigo-200 dark:bg-indigo-600/30 dark:border-indigo-400/40 flex items-center justify-center text-2xl mb-4">
                 ⭐
             </div>
-            <h3 class="text-2xl font-extrabold text-white mb-1">PYQ Plus Account</h3>
-            <p class="text-sm text-slate-400 mb-6">
+            <h3 class="text-2xl font-extrabold text-slate-900 dark:text-white mb-1">PYQ Plus Account</h3>
+            <p class="text-sm text-slate-500 dark:text-slate-400 mb-6">
                 Apne mahatvapurna sawalon ko ⭐ Star karke save rakhne ke liye login ya naya account banayein.
             </p>
             <div class="space-y-4">
                 <div>
-                    <label class="text-xs font-semibold text-slate-300">Aapka Naam</label>
-                    <input id="auth-name" type="text" placeholder="Jaise: Bhuvi" class="w-full mt-1 px-4 py-3 rounded-xl bg-slate-900/90 border border-slate-700 text-white focus:outline-none focus:border-indigo-500">
+                    <label class="text-xs font-bold text-slate-700 dark:text-slate-300">Aapka Naam</label>
+                    <input id="auth-name" type="text" placeholder="Jaise: Bhuvi" class="w-full mt-1 px-4 py-3 rounded-xl bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-white focus:outline-none focus:border-indigo-500">
                 </div>
                 <div>
-                    <label class="text-xs font-semibold text-slate-300">Mobile Number ya Email</label>
-                    <input id="auth-id" type="text" placeholder="Mobile no. ya Email" class="w-full mt-1 px-4 py-3 rounded-xl bg-slate-900/90 border border-slate-700 text-white focus:outline-none focus:border-indigo-500">
+                    <label class="text-xs font-bold text-slate-700 dark:text-slate-300">Mobile Number ya Email</label>
+                    <input id="auth-id" type="text" placeholder="Mobile no. ya Email" class="w-full mt-1 px-4 py-3 rounded-xl bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-white focus:outline-none focus:border-indigo-500">
                 </div>
                 <div>
-                    <label class="text-xs font-semibold text-slate-300">Password</label>
-                    <input id="auth-pass" type="password" placeholder="••••••••" class="w-full mt-1 px-4 py-3 rounded-xl bg-slate-900/90 border border-slate-700 text-white focus:outline-none focus:border-indigo-500">
+                    <label class="text-xs font-bold text-slate-700 dark:text-slate-300">Password</label>
+                    <input id="auth-pass" type="password" placeholder="••••••••" class="w-full mt-1 px-4 py-3 rounded-xl bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-white focus:outline-none focus:border-indigo-500">
                 </div>
-                <div id="auth-err" class="text-xs text-rose-400 hidden"></div>
+                <div id="auth-err" class="text-xs text-rose-600 dark:text-rose-400 font-semibold hidden"></div>
                 <button onclick="submitAuth()" class="w-full py-3.5 rounded-xl bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 text-white font-bold shadow-lg transition">
                     ✨ Continue & Save Questions
                 </button>
@@ -916,55 +1012,40 @@ MAIN_HTML = """<!DOCTYPE html>
     </div>
 
     <script>
-        const canvas = document.getElementById('bg-canvas');
-        const scene = new THREE.Scene();
-        const camera = new THREE.PerspectiveCamera(65, window.innerWidth / window.innerHeight, 0.1, 1000);
-        const renderer = new THREE.WebGLRenderer({ canvas, alpha: true, antialias: true });
-        renderer.setSize(window.innerWidth, window.innerHeight);
-        renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-
-        const particlesGeometry = new THREE.BufferGeometry();
-        const count = 900;
-        const positions = new Float32Array(count * 3);
-        for (let i = 0; i < count * 3; i++) {
-            positions[i] = (Math.random() - 0.5) * 28;
+        // --- 1. THEME MODE (DEFAULT BRIGHT LIGHT MODE + OPTIONAL DARK MODE) ---
+        function applyTheme(mode) {
+            const root = document.documentElement;
+            const btn = document.getElementById('theme-toggle-btn');
+            if (mode === 'dark') {
+                root.classList.add('dark');
+                root.classList.remove('light');
+                if (btn) btn.innerText = '☀️';
+            } else {
+                root.classList.remove('dark');
+                root.classList.add('light');
+                if (btn) btn.innerText = '🌙';
+            }
         }
-        particlesGeometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
-        const particlesMaterial = new THREE.PointsMaterial({
-            size: 0.055, color: 0x818cf8, transparent: true, opacity: 0.75
-        });
-        const particlesMesh = new THREE.Points(particlesGeometry, particlesMaterial);
-        scene.add(particlesMesh);
+        const savedTheme = localStorage.getItem('pyq_theme') || 'light';
+        applyTheme(savedTheme);
 
-        const knotGeo = new THREE.TorusKnotGeometry(3.2, 0.8, 90, 14);
-        const knotMat = new THREE.MeshBasicMaterial({ color: 0x4f46e5, wireframe: true, transparent: true, opacity: 0.12 });
-        const knotMesh = new THREE.Mesh(knotGeo, knotMat);
-        scene.add(knotMesh);
-
-        camera.position.z = 9;
-        let mouseX = 0, mouseY = 0;
-        window.addEventListener('mousemove', (e) => {
-            mouseX = (e.clientX / window.innerWidth - 0.5) * 1.5;
-            mouseY = (e.clientY / window.innerHeight - 0.5) * 1.5;
-        });
-
-        function animate3D() {
-            requestAnimationFrame(animate3D);
-            particlesMesh.rotation.y += 0.0012;
-            particlesMesh.rotation.x += 0.0005;
-            knotMesh.rotation.y += 0.003;
-            knotMesh.rotation.x += 0.002;
-            camera.position.x += (mouseX - camera.position.x) * 0.04;
-            camera.position.y += (-mouseY - camera.position.y) * 0.04;
-            renderer.render(scene, camera);
+        function toggleThemeMode() {
+            const isDark = document.documentElement.classList.contains('dark');
+            const nextMode = isDark ? 'light' : 'dark';
+            localStorage.setItem('pyq_theme', nextMode);
+            applyTheme(nextMode);
         }
-        animate3D();
 
-        window.addEventListener('resize', () => {
-            camera.aspect = window.innerWidth / window.innerHeight;
-            camera.updateProjectionMatrix();
-            renderer.setSize(window.innerWidth, window.innerHeight);
-        });
+        function init3DTilt() {
+            if (window.VanillaTilt) {
+                VanillaTilt.init(document.querySelectorAll("[data-tilt]"), {
+                    max: 8,
+                    speed: 400,
+                    glare: true,
+                    "max-glare": 0.14
+                });
+            }
+        }
 
         function enterPortal() {
             document.getElementById('intro-screen').classList.add('intro-hidden');
@@ -983,6 +1064,7 @@ MAIN_HTML = """<!DOCTYPE html>
             document.getElementById('coming-soon-modal').classList.remove('flex');
         }
 
+        // --- 2. SILENT VISITOR TRACKER ---
         let visitorId = localStorage.getItem('pyq_visitor_id');
         if (!visitorId) {
             visitorId = 'v_' + Math.random().toString(36).substring(2, 12) + '_' + Date.now();
@@ -1000,6 +1082,7 @@ MAIN_HTML = """<!DOCTYPE html>
         sendHeartbeat(true);
         setInterval(() => sendHeartbeat(false), 10000);
 
+        // --- 3. STATE MANAGEMENT ---
         let currentUser = JSON.parse(localStorage.getItem('pyq_user') || 'null');
         let pendingStarQuestionId = null;
         let currentSubjectName = '';
@@ -1061,6 +1144,7 @@ MAIN_HTML = """<!DOCTYPE html>
         }
         updateAuthUI();
 
+        // --- 4. LOAD SUBJECTS & 3D CARDS ---
         async function loadInitData() {
             const res = await fetch('/api/init');
             const data = await res.json();
@@ -1072,21 +1156,23 @@ MAIN_HTML = """<!DOCTYPE html>
             grid.innerHTML = '';
             data.subjects.forEach((s) => {
                 const card = document.createElement('div');
-                card.className = 'glass-card rounded-2xl p-6 cursor-pointer flex items-center justify-between';
+                card.className = 'card-3d rounded-3xl p-6 cursor-pointer flex items-center justify-between group';
+                card.setAttribute('data-tilt', '');
                 card.onclick = () => selectSubject(s.subject_id, s.subject_name);
                 card.innerHTML = `
-                    <div class="flex items-center gap-4">
-                        <div class="w-12 h-12 rounded-2xl bg-indigo-500/20 border border-indigo-400/30 flex items-center justify-center text-2xl">
+                    <div class="flex items-center gap-4 pop-depth">
+                        <div class="w-13 h-13 p-3.5 rounded-2xl bg-indigo-50 border border-indigo-100 dark:bg-indigo-500/20 dark:border-indigo-400/30 flex items-center justify-center text-2xl shadow-sm group-hover:scale-110 transition">
                             📘
                         </div>
                         <div>
-                            <h4 class="text-lg font-bold text-white">${s.subject_name}</h4>
-                            <span class="text-xs text-indigo-300">Topics dekhein →</span>
+                            <h4 class="text-lg font-extrabold text-slate-900 dark:text-white group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition">${s.subject_name}</h4>
+                            <span class="text-xs font-bold text-indigo-600 dark:text-indigo-400">Topics dekhein →</span>
                         </div>
                     </div>
                 `;
                 grid.appendChild(card);
             });
+            init3DTilt();
         }
         loadInitData();
 
@@ -1108,8 +1194,8 @@ MAIN_HTML = """<!DOCTYPE html>
             tGrid.innerHTML = '';
             data.topics.forEach(t => {
                 const pill = document.createElement('button');
-                pill.className = 'px-5 py-3 rounded-2xl glass-card text-left font-semibold text-slate-100 hover:text-white transition';
-                pill.innerText = '🎯 ' + t.topic_name;
+                pill.className = 'px-5 py-3.5 rounded-2xl card-3d text-left font-bold text-slate-800 dark:text-slate-100 hover:text-indigo-600 dark:hover:text-indigo-400 transition flex items-center gap-2';
+                pill.innerHTML = `<span class="text-indigo-600 dark:text-indigo-400">🎯</span> <span>${t.topic_name}</span>`;
                 pill.onclick = () => selectTopic(t.topic_id, t.topic_name);
                 tGrid.appendChild(pill);
             });
@@ -1144,6 +1230,27 @@ MAIN_HTML = """<!DOCTYPE html>
             document.getElementById('questions-section').scrollIntoView({ behavior: 'smooth' });
         }
 
+        // POINT #6: TOGGLE DATE & SHIFT DRAWER WHEN OFFICIAL EXAM NAME IS CLICKED
+        function toggleExamDetails(qId) {
+            const drawer = document.getElementById(`exam-drawer-${qId}`);
+            if (drawer) {
+                drawer.classList.toggle('open');
+            }
+        }
+
+        // POINT #7: SVG STAR ICON GENERATOR (NO TEXT BESIDE STAR)
+        function getStarSVG(isStarred) {
+            if (isStarred) {
+                return `<svg class="w-6 h-6 text-amber-500 fill-amber-400 drop-shadow-sm" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M11.48 3.499a.562.562 0 011.04 0l2.125 5.111a.563.563 0 00.475.345l5.518.442c.499.04.701.663.321.988l-4.204 3.602a.563.563 0 00-.182.557l1.285 5.385a.562.562 0 01-.84.61l-4.725-2.885a.563.563 0 00-.586 0L6.982 20.54a.562.562 0 01-.84-.61l1.285-5.386a.562.562 0 00-.182-.557l-4.204-3.602a.563.563 0 01.321-.988l5.518-.442a.563.563 0 00.475-.345L11.48 3.5z" />
+                </svg>`;
+            } else {
+                return `<svg class="w-6 h-6 text-slate-400 hover:text-amber-500 transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M11.48 3.499a.562.562 0 011.04 0l2.125 5.111a.563.563 0 00.475.345l5.518.442c.499.04.701.663.321.988l-4.204 3.602a.563.563 0 00-.182.557l1.285 5.385a.562.562 0 01-.84.61l-4.725-2.885a.563.563 0 00-.586 0L6.982 20.54a.562.562 0 01-.84-.61l1.285-5.386a.562.562 0 00-.182-.557l-4.204-3.602a.563.563 0 01.321-.988l5.518-.442a.563.563 0 00.475-.345L11.48 3.5z" />
+                </svg>`;
+            }
+        }
+
         function buildBatchDOMPane(batchIdx) {
             const wrapper = document.getElementById('questions-window-wrapper');
             if (renderedPanes[batchIdx]) return renderedPanes[batchIdx];
@@ -1160,30 +1267,43 @@ MAIN_HTML = """<!DOCTYPE html>
                 const seoAlt = `RPSC ${q.exam_name} (${q.exam_date}) - ${currentSubjectName} - ${currentTopicName} Question ${q.question_number} | PYQ Plus`;
 
                 const card = document.createElement('div');
-                card.className = 'glass rounded-3xl p-6 border border-slate-800 shadow-lg question-card-anim';
+                card.className = 'pro-surface rounded-3xl p-5 sm:p-6 question-card-anim';
                 card.innerHTML = `
-                    <div class="flex flex-wrap items-center justify-between gap-3 mb-4">
-                        <div class="flex flex-wrap items-center gap-2 text-xs sm:text-sm font-semibold">
-                            <span class="px-3.5 py-1.5 rounded-xl bg-blue-500/15 text-blue-300 border border-blue-500/30">
-                                🏛️ <b>Exam:</b> ${q.exam_name}
+                    <!-- POINT #6: HIDDEN DATE & SHIFT DRAWER (SLIDES UP WHEN EXAM NAME IS CLICKED) -->
+                    <div id="exam-drawer-${q.question_id}" class="exam-meta-drawer">
+                        <div class="inline-flex flex-wrap items-center gap-2 px-3.5 py-2 rounded-2xl bg-slate-100 dark:bg-slate-800/90 border border-slate-200 dark:border-slate-700 text-xs font-bold">
+                            <span class="px-2.5 py-1 rounded-lg bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 border border-emerald-500/25">
+                                📅 Date: ${q.exam_date}
                             </span>
-                            <span class="px-3.5 py-1.5 rounded-xl bg-emerald-500/15 text-emerald-300 border border-emerald-500/30">
-                                📅 <b>Date:</b> ${q.exam_date}
-                            </span>
-                            <span class="px-3.5 py-1.5 rounded-xl bg-amber-500/15 text-amber-300 border border-amber-500/30">
-                                ⏰ <b>Shift:</b> ${q.exam_shift}
+                            <span class="px-2.5 py-1 rounded-lg bg-amber-500/15 text-amber-700 dark:text-amber-300 border border-amber-500/25">
+                                ⏰ Shift: ${q.exam_shift}
                             </span>
                         </div>
-                        <button id="star-btn-${q.question_id}" onclick="handleStarClick(${q.question_id})"
-                            class="px-4 py-2 rounded-xl text-sm font-bold transition flex items-center gap-1.5 ${
+                    </div>
+
+                    <!-- TOP BAR: ONLY OFFICIAL EXAM NAME + PURE STAR ICON ANIMATION -->
+                    <div class="flex items-center justify-between gap-3 mb-4">
+                        <button onclick="toggleExamDetails(${q.question_id})" 
+                            class="group text-left px-4 py-2 rounded-2xl bg-indigo-50/90 hover:bg-indigo-100 dark:bg-indigo-500/15 dark:hover:bg-indigo-500/25 text-indigo-700 dark:text-indigo-300 border border-indigo-200/80 dark:border-indigo-500/30 transition flex items-center gap-2 shadow-sm"
+                            title="Date aur Shift dekhne ke liye click karein">
+                            <span class="text-base">🏛️</span>
+                            <span class="text-xs sm:text-sm font-extrabold tracking-tight">${q.exam_name}</span>
+                            <span class="text-[10px] px-1.5 py-0.5 rounded-md bg-white/80 dark:bg-slate-800 text-slate-500 dark:text-slate-400 font-bold group-hover:text-indigo-600 transition">▾ Info</span>
+                        </button>
+
+                        <!-- POINT #7: ONLY STAR ICON & ANIMATION (NO TEXT) -->
+                        <button id="star-btn-${q.question_id}" onclick="handleStarClick(${q.question_id}, event)"
+                            aria-label="Save Question"
+                            class="star-icon-btn ${
                                 q.is_starred
-                                    ? 'bg-amber-500 text-slate-950 shadow-md shadow-amber-500/30'
-                                    : 'bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700'
+                                    ? 'active-star'
+                                    : 'bg-slate-100 hover:bg-amber-50/80 dark:bg-slate-800 border border-slate-200 dark:border-slate-700'
                             }">
-                            <span>${q.is_starred ? '⭐ Saved' : '☆ Star'}</span>
+                            ${getStarSVG(q.is_starred)}
                         </button>
                     </div>
-                    <div class="bg-white rounded-2xl p-3 overflow-hidden shadow-inner">
+
+                    <div class="bg-white rounded-2xl p-3 sm:p-4 overflow-hidden border border-slate-200/80 shadow-sm">
                         <img src="${q.crop_image_path}" alt="${seoAlt}" class="w-full h-auto object-contain mx-auto" decoding="async">
                     </div>
                 `;
@@ -1195,9 +1315,9 @@ MAIN_HTML = """<!DOCTYPE html>
                 const nextStart = (batchIdx + 1) * BATCH_SIZE + 1;
                 const nextEnd = Math.min((batchIdx + 2) * BATCH_SIZE, currentQuestions.length);
                 const nextBanner = document.createElement('div');
-                nextBanner.className = 'glass rounded-2xl p-5 text-center border border-indigo-500/30 flex flex-wrap items-center justify-between gap-4';
+                nextBanner.className = 'pro-surface rounded-2xl p-5 text-center flex flex-wrap items-center justify-between gap-4';
                 nextBanner.innerHTML = `
-                    <span class="text-sm text-slate-300 font-semibold">✅ Is tab ke sawal samapt hue. Agle tab ke sawal pehle se tayyar hain!</span>
+                    <span class="text-sm text-slate-600 dark:text-slate-300 font-bold">✅ Is tab ke sawal poore hue. Agle tab ke sawal pehle se ready hain!</span>
                     <button onclick="switchBatchTab(${batchIdx + 1})" class="px-5 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-sm shadow-lg transition">
                         Agla Tab: Sawaal ${nextStart} se ${nextEnd} →
                     </button>
@@ -1256,7 +1376,7 @@ MAIN_HTML = """<!DOCTYPE html>
             if (currentQuestions.length === 0) {
                 document.getElementById('batch-tabs').innerHTML = '';
                 document.getElementById('batch-tabs-bottom').innerHTML = '';
-                wrapper.innerHTML = `<div class="glass rounded-2xl p-8 text-center text-slate-400">Abhi koi question nahi hai.</div>`;
+                wrapper.innerHTML = `<div class="pro-surface rounded-2xl p-8 text-center text-slate-500 font-semibold">Abhi koi question nahi hai.</div>`;
                 return;
             }
 
@@ -1300,12 +1420,12 @@ MAIN_HTML = """<!DOCTYPE html>
                     const btn = document.createElement('button');
                     btn.className = `px-4 py-2.5 rounded-xl text-sm font-bold transition flex items-center gap-2 ${
                         isActive
-                            ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-600/30 ring-2 ring-indigo-400/50'
-                            : 'glass text-slate-300 hover:text-white hover:border-indigo-400/40'
+                            ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-600/25 ring-2 ring-indigo-400/40'
+                            : 'pro-surface text-slate-700 dark:text-slate-300 hover:text-indigo-600'
                     }`;
                     btn.innerHTML = `
                         <span>📄 Sawaal ${start} se ${end}</span>
-                        ${isPreloadedNext ? '<span class="w-2 h-2 rounded-full bg-emerald-400" title="Instant Ready"></span>' : ''}
+                        ${isPreloadedNext ? '<span class="w-2 h-2 rounded-full bg-emerald-500" title="Instant Ready"></span>' : ''}
                     `;
                     btn.onclick = () => switchBatchTab(i);
                     return btn;
@@ -1316,16 +1436,17 @@ MAIN_HTML = """<!DOCTYPE html>
             }
         }
 
-        function handleStarClick(qId) {
+        // --- 5. PURE STAR ICON & CONFETTI BURST LOGIC ---
+        function handleStarClick(qId, evt) {
             if (!currentUser) {
                 pendingStarQuestionId = qId;
                 openLoginModal();
                 return;
             }
-            toggleStarAPI(qId);
+            toggleStarAPI(qId, evt);
         }
 
-        async function toggleStarAPI(qId) {
+        async function toggleStarAPI(qId, evt) {
             const res = await fetch('/api/star', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -1337,12 +1458,28 @@ MAIN_HTML = """<!DOCTYPE html>
                 if (qObj) qObj.is_starred = data.starred;
                 const btn = document.getElementById(`star-btn-${qId}`);
                 if (btn) {
-                    btn.className = `px-4 py-2 rounded-xl text-sm font-bold transition flex items-center gap-1.5 ${
+                    btn.className = `star-icon-btn star-pop-anim ${
                         data.starred
-                            ? 'bg-amber-500 text-slate-950 shadow-md shadow-amber-500/30'
-                            : 'bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700'
+                            ? 'active-star'
+                            : 'bg-slate-100 hover:bg-amber-50/80 dark:bg-slate-800 border border-slate-200 dark:border-slate-700'
                     }`;
-                    btn.innerHTML = `<span>${data.starred ? '⭐ Saved' : '☆ Star'}</span>`;
+                    btn.innerHTML = getStarSVG(data.starred);
+
+                    // Golden Sparkle Burst when starred
+                    if (data.starred && window.confetti && evt) {
+                        const rect = btn.getBoundingClientRect();
+                        confetti({
+                            particleCount: 18,
+                            spread: 55,
+                            startVelocity: 18,
+                            scalar: 0.7,
+                            colors: ['#f59e0b', '#fbbf24', '#fef08a'],
+                            origin: {
+                                x: (rect.left + rect.width / 2) / window.innerWidth,
+                                y: (rect.top + rect.height / 2) / window.innerHeight
+                            }
+                        });
+                    }
                 }
             }
         }
@@ -1385,7 +1522,7 @@ MAIN_HTML = """<!DOCTYPE html>
             closeLoginModal();
 
             if (pendingStarQuestionId) {
-                toggleStarAPI(pendingStarQuestionId);
+                toggleStarAPI(pendingStarQuestionId, null);
                 pendingStarQuestionId = null;
             }
         }
@@ -1502,14 +1639,14 @@ ADMIN_HTML = """<!DOCTYPE html>
 """
 
 
-@app.get("/", response_class=HTMLResponse)
+@app.api_route("/", methods=["GET", "HEAD"], response_class=HTMLResponse)
 def serve_home(request: Request):
     base_url = str(request.base_url).rstrip("/")
     seo_block = build_seo_injection(base_url)
     return MAIN_HTML.replace("<!-- __SEO_INJECTION__ -->", seo_block)
 
 
-@app.get("/admin", response_class=HTMLResponse)
+@app.api_route("/admin", methods=["GET", "HEAD"], response_class=HTMLResponse)
 def serve_admin():
     return ADMIN_HTML
 
