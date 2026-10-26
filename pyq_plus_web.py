@@ -4,7 +4,7 @@ import time
 import hashlib
 import base64
 import json
-from datetime import datetime
+from datetime import datetime, timedelta
 from pathlib import Path
 from fastapi import FastAPI, Request
 from fastapi.responses import HTMLResponse, JSONResponse, Response
@@ -325,26 +325,95 @@ def api_heartbeat(req: HeartbeatRequest):
 @app.get("/api/admin-analytics")
 def api_admin_analytics():
     summary = db_read("""
-        SELECT 
+        SELECT
             COUNT(visitor_id) as total_visitors,
             COALESCE(SUM(total_seconds), 0) as total_sec,
             COALESCE(AVG(total_seconds), 0) as avg_sec,
             COALESCE(SUM(page_views), 0) as total_views,
             (SELECT COUNT(*) FROM pyq_users) as registered_users,
-            (SELECT COUNT(*) FROM pyq_starred) as total_stars
+            (SELECT COUNT(*) FROM pyq_starred) as total_stars,
+            (SELECT COUNT(*) FROM question_papers) as total_papers,
+            (SELECT COUNT(*) FROM question_papers WHERE is_completed = 1) as completed_papers,
+            (SELECT COUNT(*) FROM question_papers WHERE is_completed = 0) as incomplete_papers,
+            (SELECT COUNT(*) FROM questions) as total_questions,
+            (SELECT COUNT(*) FROM questions WHERE ai_status = 'COMPLETED') as completed_questions,
+            (SELECT COUNT(*) FROM questions WHERE ai_status = 'PENDING') as pending_questions,
+            (SELECT COUNT(*) FROM questions WHERE ai_status LIKE 'REJECTED%') as rejected_questions
         FROM pyq_analytics
     """, fetchone=True)
 
-    daily = db_read("""
-        SELECT visit_date, COUNT(visitor_id) as visitors, ROUND(AVG(total_seconds)/60.0, 1) as avg_minutes
+    first_visit_start = (datetime.now().date() - timedelta(days=29)).isoformat()
+    first_visit_end = datetime.now().date().isoformat()
+    daily_first_visits = db_read("""
+        SELECT visit_date, COUNT(visitor_id) as first_visits
         FROM pyq_analytics
+        WHERE visit_date >= ? AND visit_date <= ?
         GROUP BY visit_date
         ORDER BY visit_date ASC
-        LIMIT 30
+    """, (first_visit_start, first_visit_end))
+
+    first_visits_by_date = {
+        row["visit_date"]: row["first_visits"] for row in daily_first_visits
+    }
+    today = datetime.now().date()
+    first_visits = [
+        {
+            "date": (today - timedelta(days=offset)).isoformat(),
+            "count": first_visits_by_date.get(
+                (today - timedelta(days=offset)).isoformat(), 0
+            ),
+        }
+        for offset in range(29, -1, -1)
+    ]
+
+    subject_rows = db_read("""
+        SELECT s.subject_name, COUNT(q.question_id) as completed_questions
+        FROM questions q
+        JOIN topics t ON q.topic_id = t.topic_id
+        JOIN subjects s ON t.subject_id = s.subject_id
+        WHERE q.ai_status = 'COMPLETED'
+        GROUP BY s.subject_id, s.subject_name
+        ORDER BY completed_questions DESC, s.subject_name ASC
+        LIMIT 10
     """)
+
+    paper_rows = db_read("""
+        SELECT
+            e.exam_name,
+            e.conducting_year,
+            qp.pdf_file_name,
+            qp.exam_date,
+            qp.exam_shift,
+            qp.is_completed,
+            COUNT(q.question_id) as detected_questions,
+            COALESCE(SUM(CASE WHEN q.ai_status = 'COMPLETED' THEN 1 ELSE 0 END), 0)
+                as classified_questions,
+            COALESCE(SUM(CASE WHEN q.ai_status = 'PENDING' THEN 1 ELSE 0 END), 0)
+                as pending_questions,
+            COALESCE(SUM(CASE WHEN q.ai_status LIKE 'REJECTED%' THEN 1 ELSE 0 END), 0)
+                as rejected_questions
+        FROM question_papers qp
+        JOIN examinations e ON e.exam_id = qp.exam_id
+        LEFT JOIN questions q ON q.paper_id = qp.paper_id
+        GROUP BY qp.paper_id
+        ORDER BY qp.is_completed ASC, detected_questions DESC, e.exam_name ASC
+        LIMIT 12
+    """)
+
+    status_rows = db_read("""
+        SELECT ai_status, COUNT(*) as count
+        FROM questions
+        GROUP BY ai_status
+        ORDER BY ai_status
+    """)
+
     return {
         "summary": dict(summary) if summary else {},
-        "daily": [dict(d) for d in daily]
+        "first_visits": first_visits,
+        "subjects": [dict(row) for row in subject_rows],
+        "papers": [dict(row) for row in paper_rows],
+        "question_statuses": [dict(row) for row in status_rows],
+        "updated_at": datetime.now().isoformat(timespec="seconds"),
     }
 
 
@@ -1559,80 +1628,256 @@ MAIN_HTML = """<!DOCTYPE html>
 """
 
 
-# --- PRIVATE FOUNDER ANALYTICS DASHBOARD (/admin) ---
+# --- FOUNDER ANALYTICS DASHBOARD (/admin) ---
 ADMIN_HTML = """<!DOCTYPE html>
 <html lang="hi">
 <head>
     <meta charset="UTF-8">
-    <title>PYQ Plus — Founder Private Analytics</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="theme-color" content="#0b1220">
+    <title>PYQ Plus — Admin Analytics</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body { background: #0b1220; }
+        .panel { background: linear-gradient(145deg, #121d30, #101827); }
+        .chart-wrap { position: relative; height: 280px; }
+        @media (max-width: 640px) { .chart-wrap { height: 230px; } }
+    </style>
 </head>
-<body class="bg-slate-950 text-white min-h-screen p-6 md:p-10 font-sans">
-    <div class="max-w-6xl mx-auto">
-        <div class="flex items-center justify-between mb-8">
+<body class="min-h-screen text-slate-100 font-sans">
+    <main class="max-w-7xl mx-auto px-4 py-7 md:px-8 md:py-10">
+        <header class="flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between mb-8">
             <div>
-                <h1 class="text-3xl font-extrabold text-white">📊 PYQ Plus — Private Founder Analytics</h1>
-                <p class="text-slate-400 text-sm">Bina login kiye aane wale visitors aur unke rukne ke samay (Retention) ki live report</p>
+                <p class="text-indigo-300 text-sm font-bold tracking-wide">PYQ PLUS · ADMIN</p>
+                <h1 class="text-3xl md:text-4xl font-black mt-1">Site performance</h1>
+                <p class="text-slate-400 mt-2">Content quality, paper coverage aur student engagement ka data-based overview.</p>
             </div>
-            <a href="/" class="px-4 py-2 rounded-xl bg-indigo-600 text-sm font-bold">← Main Website</a>
-        </div>
+            <div class="flex items-center gap-3">
+                <span id="updated-at" class="text-xs text-slate-500">Data load ho raha hai…</span>
+                <button id="refresh-button" type="button" class="rounded-xl border border-slate-700 px-4 py-2 text-sm font-semibold hover:bg-slate-800">Refresh</button>
+                <a href="/" class="rounded-xl bg-indigo-500 px-4 py-2 text-sm font-bold hover:bg-indigo-400">Main site</a>
+            </div>
+        </header>
 
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 mb-10">
-            <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5">
-                <div class="text-xs text-slate-400 uppercase font-bold">Kul Unique Visitors</div>
-                <div id="a-visitors" class="text-3xl font-extrabold text-indigo-400 mt-1">0</div>
-            </div>
-            <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5">
-                <div class="text-xs text-slate-400 uppercase font-bold">Avg. Rukne Ka Samay</div>
-                <div id="a-time" class="text-3xl font-extrabold text-emerald-400 mt-1">0 Min</div>
-            </div>
-            <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5">
-                <div class="text-xs text-slate-400 uppercase font-bold">Registered Students</div>
-                <div id="a-users" class="text-3xl font-extrabold text-amber-400 mt-1">0</div>
-            </div>
-            <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5">
-                <div class="text-xs text-slate-400 uppercase font-bold">⭐ Starred Questions</div>
-                <div id="a-stars" class="text-3xl font-extrabold text-rose-400 mt-1">0</div>
-            </div>
-        </div>
+        <div id="error-banner" class="hidden mb-6 rounded-xl border border-rose-800 bg-rose-950/60 px-4 py-3 text-sm text-rose-200" role="alert"></div>
 
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6">
-                <h3 class="font-bold mb-4 text-slate-200">📈 Rozana Kitne Visitors Aaye</h3>
-                <canvas id="visitorsChart"></canvas>
+        <section aria-labelledby="content-title">
+            <div class="mb-4">
+                <h2 id="content-title" class="text-xl font-bold">Archive health</h2>
+                <p class="text-sm text-slate-400 mt-1">Counts database ke current records se aate hain; “completed paper” ka matlab full paper scan status hai.</p>
             </div>
-            <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6">
-                <h3 class="font-bold mb-4 text-slate-200">⏱️ Visitors Kitne Minute Ruke (Avg Retention)</h3>
-                <canvas id="timeChart"></canvas>
+            <div class="grid grid-cols-2 xl:grid-cols-4 gap-3 md:gap-5">
+                <article class="panel rounded-2xl border border-slate-800 p-4 md:p-5">
+                    <p class="text-xs font-bold uppercase tracking-wide text-slate-400">Completed questions</p>
+                    <p id="metric-completed-questions" class="mt-2 text-3xl font-black text-emerald-300">—</p>
+                    <p class="mt-2 text-xs text-slate-500">AI classification status = COMPLETED</p>
+                </article>
+                <article class="panel rounded-2xl border border-slate-800 p-4 md:p-5">
+                    <p class="text-xs font-bold uppercase tracking-wide text-slate-400">Scanned papers</p>
+                    <p id="metric-completed-papers" class="mt-2 text-3xl font-black text-indigo-300">—</p>
+                    <p id="metric-paper-coverage" class="mt-2 text-xs text-slate-500">Full-scan papers / all papers</p>
+                </article>
+                <article class="panel rounded-2xl border border-slate-800 p-4 md:p-5">
+                    <p class="text-xs font-bold uppercase tracking-wide text-slate-400">Awaiting classification</p>
+                    <p id="metric-pending" class="mt-2 text-3xl font-black text-amber-300">—</p>
+                    <p class="mt-2 text-xs text-slate-500">Detected crops with PENDING status</p>
+                </article>
+                <article class="panel rounded-2xl border border-slate-800 p-4 md:p-5">
+                    <p class="text-xs font-bold uppercase tracking-wide text-slate-400">Rejected questions</p>
+                    <p id="metric-rejected" class="mt-2 text-3xl font-black text-rose-300">—</p>
+                    <p class="mt-2 text-xs text-slate-500">All REJECTED_* statuses</p>
+                </article>
             </div>
-        </div>
-    </div>
+        </section>
+
+        <section class="mt-8 grid grid-cols-1 xl:grid-cols-3 gap-5" aria-label="Archive charts">
+            <article class="panel rounded-2xl border border-slate-800 p-5">
+                <h3 class="font-bold">Question workflow</h3>
+                <p class="text-xs text-slate-400 mt-1">Har detected question ka current processing status.</p>
+                <div class="chart-wrap mt-4"><canvas id="question-status-chart" aria-label="Question status chart"></canvas></div>
+            </article>
+            <article class="panel rounded-2xl border border-slate-800 p-5">
+                <h3 class="font-bold">Paper scan coverage</h3>
+                <p class="text-xs text-slate-400 mt-1">Database mein marked full-scan papers vs remaining.</p>
+                <div class="chart-wrap mt-4"><canvas id="paper-status-chart" aria-label="Paper scan coverage chart"></canvas></div>
+            </article>
+            <article class="panel rounded-2xl border border-slate-800 p-5">
+                <h3 class="font-bold">Most classified subjects</h3>
+                <p class="text-xs text-slate-400 mt-1">Completed questions ke hisaab se top subjects.</p>
+                <div class="chart-wrap mt-4"><canvas id="subject-chart" aria-label="Top subjects chart"></canvas></div>
+            </article>
+        </section>
+
+        <section class="mt-8 grid grid-cols-1 lg:grid-cols-2 gap-5" aria-label="Audience analytics">
+            <article class="panel rounded-2xl border border-slate-800 p-5">
+                <h2 class="font-bold">Audience & engagement</h2>
+                <p class="text-xs text-slate-400 mt-1">Visitor ID first observed each day; this is not daily returning-user count.</p>
+                <div class="grid grid-cols-2 gap-3 mt-4">
+                    <div class="rounded-xl bg-slate-900/70 p-4">
+                        <p class="text-xs text-slate-400">Tracked visitor IDs</p>
+                        <p id="metric-visitors" class="mt-1 text-2xl font-bold">—</p>
+                    </div>
+                    <div class="rounded-xl bg-slate-900/70 p-4">
+                        <p class="text-xs text-slate-400">Registered accounts</p>
+                        <p id="metric-users" class="mt-1 text-2xl font-bold">—</p>
+                    </div>
+                    <div class="rounded-xl bg-slate-900/70 p-4">
+                        <p class="text-xs text-slate-400">Recorded page views</p>
+                        <p id="metric-page-views" class="mt-1 text-2xl font-bold">—</p>
+                    </div>
+                    <div class="rounded-xl bg-slate-900/70 p-4">
+                        <p class="text-xs text-slate-400">Avg. tracked time / visitor</p>
+                        <p id="metric-time" class="mt-1 text-2xl font-bold">—</p>
+                    </div>
+                </div>
+                <div class="chart-wrap mt-5"><canvas id="first-visits-chart" aria-label="First observed visitors over 30 days"></canvas></div>
+                <p class="text-xs leading-relaxed text-slate-500 mt-3">Time heartbeat se estimate hota hai; browser/device limits ke karan yeh exact active attention time nahi hai. Starred questions: <strong id="metric-stars" class="text-slate-300">—</strong></p>
+            </article>
+            <article class="panel rounded-2xl border border-slate-800 p-5">
+                <h2 class="font-bold">Paper worklist</h2>
+                <p class="text-xs text-slate-400 mt-1">Detected, classified, pending aur rejected question counts per paper.</p>
+                <div class="overflow-x-auto mt-4">
+                    <table class="w-full text-left text-sm">
+                        <thead class="text-xs uppercase text-slate-500 border-b border-slate-800">
+                            <tr><th class="py-3 pr-3">Paper</th><th class="py-3 px-2">Scan</th><th class="py-3 px-2">Done</th><th class="py-3 px-2">Pending</th><th class="py-3 pl-2">Rejected</th></tr>
+                        </thead>
+                        <tbody id="paper-table" class="divide-y divide-slate-800/80"></tbody>
+                    </table>
+                </div>
+            </article>
+        </section>
+
+        <section class="mt-8 panel rounded-2xl border border-slate-800 p-5">
+            <h2 class="font-bold">Metrics ko kaise padhein</h2>
+            <dl class="grid sm:grid-cols-2 xl:grid-cols-3 gap-x-8 gap-y-4 mt-4 text-sm">
+                <div><dt class="font-semibold text-emerald-200">Completed questions</dt><dd class="text-slate-400 mt-1">Woh question rows jo AI classification ke baad COMPLETED hain. Yeh total scanned pixels/crops ka measure nahi.</dd></div>
+                <div><dt class="font-semibold text-indigo-200">Scanned papers / coverage</dt><dd class="text-slate-400 mt-1">`is_completed=1` papers / total papers. Is flag ka matlab scan pass complete; yeh har question ke accepted hone ki guarantee nahi.</dd></div>
+                <div><dt class="font-semibold text-amber-200">Awaiting classification</dt><dd class="text-slate-400 mt-1">PENDING question rows. Zero ka matlab classifier queue mein abhi koi pending row nahi.</dd></div>
+                <div><dt class="font-semibold text-rose-200">Rejected questions</dt><dd class="text-slate-400 mt-1">REJECTED_* status wali rows. Inhe accepted/completed count mein include nahi kiya jata.</dd></div>
+                <div><dt class="font-semibold text-sky-200">First-observed visitor IDs</dt><dd class="text-slate-400 mt-1">Daily heartbeat table mein pehli baar record hue visitor IDs. Purane IDs ke repeat visits rozana alag se record nahi hote.</dd></div>
+                <div><dt class="font-semibold text-violet-200">Top subjects</dt><dd class="text-slate-400 mt-1">COMPLETED questions ki current taxonomy grouping; subject-wise accuracy ya exam-weightage ka score nahi.</dd></div>
+            </dl>
+        </section>
+        <footer class="text-center text-xs text-slate-600 mt-8">Dashboard aggregates only; personal visitor identifiers are not displayed. Auto-refresh har 60 seconds.</footer>
+    </main>
 
     <script>
-        async function loadAnalytics() {
-            const res = await fetch('/api/admin-analytics');
-            const data = await res.json();
-            const s = data.summary;
-            document.getElementById('a-visitors').innerText = s.total_visitors || 0;
-            document.getElementById('a-time').innerText = ((s.avg_sec || 0) / 60).toFixed(1) + ' Min';
-            document.getElementById('a-users').innerText = s.registered_users || 0;
-            document.getElementById('a-stars').innerText = s.total_stars || 0;
+        const numberFormat = new Intl.NumberFormat('en-IN');
+        const charts = {};
+        const chartColors = ['#34d399', '#fbbf24', '#fb7185', '#64748b', '#60a5fa', '#c084fc'];
+        Chart.defaults.color = '#94a3b8';
+        Chart.defaults.font.family = 'Inter, ui-sans-serif, system-ui, sans-serif';
 
-            const labels = data.daily.map(d => d.visit_date);
-            const vCounts = data.daily.map(d => d.visitors);
-            const avgMins = data.daily.map(d => d.avg_minutes);
-
-            new Chart(document.getElementById('visitorsChart'), {
-                type: 'bar',
-                data: { labels, datasets: [{ label: 'Unique Visitors', data: vCounts, backgroundColor: '#6366f1', borderRadius: 8 }] }
-            });
-            new Chart(document.getElementById('timeChart'), {
-                type: 'line',
-                data: { labels, datasets: [{ label: 'Avg Minutes Spent', data: avgMins, borderColor: '#10b981', tension: 0.3, fill: true }] }
-            });
+        function setText(id, value) {
+            document.getElementById(id).textContent = value;
         }
+
+        function makeChart(id, config) {
+            if (charts[id]) {
+                charts[id].data = config.data;
+                charts[id].options = config.options;
+                charts[id].update();
+            } else {
+                charts[id] = new Chart(document.getElementById(id), config);
+            }
+        }
+
+        function renderPaperRows(rows) {
+            const body = document.getElementById('paper-table');
+            body.replaceChildren();
+            for (const paper of rows) {
+                const tr = document.createElement('tr');
+                const title = document.createElement('td');
+                title.className = 'py-3 pr-3 min-w-52';
+                title.textContent = `${paper.exam_name} · ${paper.conducting_year}`;
+                const scan = document.createElement('td');
+                scan.className = 'py-3 px-2';
+                scan.textContent = paper.is_completed ? 'Complete' : 'In progress';
+                scan.classList.add(paper.is_completed ? 'text-emerald-300' : 'text-amber-300');
+                tr.append(title, scan);
+                for (const value of [paper.classified_questions, paper.pending_questions, paper.rejected_questions]) {
+                    const td = document.createElement('td');
+                    td.className = 'py-3 px-2 tabular-nums';
+                    td.textContent = numberFormat.format(value);
+                    tr.appendChild(td);
+                }
+                body.appendChild(tr);
+            }
+            if (!rows.length) {
+                const tr = document.createElement('tr');
+                const td = document.createElement('td');
+                td.colSpan = 5;
+                td.className = 'py-5 text-center text-slate-500';
+                td.textContent = 'Abhi paper records nahi hain.';
+                tr.appendChild(td);
+                body.appendChild(tr);
+            }
+        }
+
+        function renderAnalytics(data) {
+            const s = data.summary;
+            setText('metric-completed-questions', numberFormat.format(s.completed_questions));
+            setText('metric-completed-papers', `${numberFormat.format(s.completed_papers)} / ${numberFormat.format(s.total_papers)}`);
+            const coverage = s.total_papers ? (100 * s.completed_papers / s.total_papers).toFixed(1) : '0.0';
+            setText('metric-paper-coverage', `${coverage}% full-scan flag`);
+            setText('metric-pending', numberFormat.format(s.pending_questions));
+            setText('metric-rejected', numberFormat.format(s.rejected_questions));
+            setText('metric-visitors', numberFormat.format(s.total_visitors));
+            setText('metric-users', numberFormat.format(s.registered_users));
+            setText('metric-page-views', numberFormat.format(s.total_views));
+            setText('metric-time', `${(s.avg_sec / 60).toFixed(1)} min`);
+            setText('metric-stars', numberFormat.format(s.total_stars));
+            setText('updated-at', `Updated ${new Date(data.updated_at).toLocaleTimeString()}`);
+
+            const statusLabels = data.question_statuses.map(row => row.ai_status);
+            const statusCounts = data.question_statuses.map(row => row.count);
+            makeChart('question-status-chart', {
+                type: 'doughnut',
+                data: { labels: statusLabels, datasets: [{ data: statusCounts, backgroundColor: chartColors, borderColor: '#121d30', borderWidth: 3 }] },
+                options: { maintainAspectRatio: false, plugins: { legend: { position: 'bottom' } } }
+            });
+            makeChart('paper-status-chart', {
+                type: 'doughnut',
+                data: { labels: ['Full scan marked', 'Not yet full scan'], datasets: [{ data: [s.completed_papers, s.incomplete_papers], backgroundColor: ['#818cf8', '#334155'], borderColor: '#121d30', borderWidth: 3 }] },
+                options: { maintainAspectRatio: false, plugins: { legend: { position: 'bottom' } } }
+            });
+            makeChart('subject-chart', {
+                type: 'bar',
+                data: { labels: data.subjects.map(row => row.subject_name), datasets: [{ label: 'Completed questions', data: data.subjects.map(row => row.completed_questions), backgroundColor: '#38bdf8', borderRadius: 6 }] },
+                options: { indexAxis: 'y', maintainAspectRatio: false, scales: { x: { beginAtZero: true, grid: { color: '#263246' } }, y: { grid: { display: false } } }, plugins: { legend: { display: false } } }
+            });
+            makeChart('first-visits-chart', {
+                type: 'line',
+                data: { labels: data.first_visits.map(row => row.date), datasets: [{ label: 'First-observed visitor IDs', data: data.first_visits.map(row => row.count), borderColor: '#a78bfa', backgroundColor: 'rgba(167,139,250,.14)', pointRadius: 2, tension: .25, fill: true }] },
+                options: { maintainAspectRatio: false, scales: { y: { beginAtZero: true, ticks: { precision: 0 }, grid: { color: '#263246' } }, x: { grid: { display: false }, ticks: { maxTicksLimit: 8 } } } }
+            });
+            renderPaperRows(data.papers);
+        }
+
+        async function loadAnalytics() {
+            const banner = document.getElementById('error-banner');
+            const button = document.getElementById('refresh-button');
+            button.disabled = true;
+            banner.classList.add('hidden');
+            try {
+                const response = await fetch('/api/admin-analytics', { cache: 'no-store' });
+                if (!response.ok) throw new Error(`Analytics request failed (${response.status})`);
+                const data = await response.json();
+                if (!data.summary || !Array.isArray(data.question_statuses) || !Array.isArray(data.first_visits)) {
+                    throw new Error('Analytics response format unexpected hai.');
+                }
+                renderAnalytics(data);
+            } catch (error) {
+                banner.textContent = `Dashboard data load nahi hua: ${error.message}`;
+                banner.classList.remove('hidden');
+            } finally {
+                button.disabled = false;
+            }
+        }
+        document.getElementById('refresh-button').addEventListener('click', loadAnalytics);
         loadAnalytics();
+        window.setInterval(loadAnalytics, 60000);
     </script>
 </body>
 </html>
